@@ -8,7 +8,7 @@ import { AuthResponse, LoginRequest, RegisterRequest, Vendor } from '../models';
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:3001/api';
+  private readonly API_URL = 'http://localhost:4100/api';
   private currentVendorSubject = new BehaviorSubject<Vendor | null>(null);
   public currentVendor$ = this.currentVendorSubject.asObservable();
 

@@ -8,7 +8,7 @@ import { AuthService } from './auth.service';
   providedIn: 'root'
 })
 export class WaitlistService {
-  private readonly API_URL = 'http://localhost:3001/api';
+  private readonly API_URL = 'http://localhost:4100/api';
 
   constructor(
     private http: HttpClient,
