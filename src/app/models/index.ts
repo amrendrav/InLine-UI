@@ -17,6 +17,7 @@ export interface Customer {
   lastName?: string;
   email?: string;
   phone?: string;
+  partySize: number;
   position: number;
   waitTime: number;
   status: 'waiting' | 'notified' | 'served' | 'cancelled';
@@ -70,6 +71,7 @@ export interface CustomerJoinRequest {
   lastName?: string;
   email?: string;
   phone?: string;
+  partySize: number;
   vendorId: number;
 }
 

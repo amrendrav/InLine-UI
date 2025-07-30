@@ -19,7 +19,7 @@ fi
 # Start the backend server
 echo "🔧 Starting backend server on port 3001..."
 cd "$(dirname "$0")/backend"
-PORT=3001 npm run dev &
+PORT=4001 npm run dev &
 BACKEND_PID=$!
 
 # Wait a moment for backend to start
@@ -34,7 +34,7 @@ FRONTEND_PID=$!
 echo ""
 echo "✅ Application started successfully!"
 echo "🌐 Frontend: http://localhost:4200"
-echo "🔧 Backend API: http://localhost:3001"
+echo "🔧 Backend API: http://localhost:4001"
 echo "🧪 Test Interface: file://$(pwd)/simple-test.html"
 echo ""
 echo "Press Ctrl+C to stop all services"

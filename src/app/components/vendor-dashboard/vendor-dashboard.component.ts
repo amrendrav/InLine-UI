@@ -57,7 +57,17 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
               <mat-card class="metric-card">
                 <mat-card-content>
                   <div class="metric-value">{{ metrics?.totalCustomers || 0 }}</div>
-                  <div class="metric-label">Customers in Queue</div>
+                  <div class="metric-label">Parties in Queue</div>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="metric-card">
+                <mat-card-content>
+                  <div class="metric-value">{{ getTotalPeopleCount() }}</div>
+                  <div class="metric-label">Total People</div>
+                  <div class="metric-icon">
+                    <mat-icon>group</mat-icon>
+                  </div>
                 </mat-card-content>
               </mat-card>
 
@@ -65,6 +75,16 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
                 <mat-card-content>
                   <div class="metric-value">{{ metrics?.averageWaitTime || 0 }}min</div>
                   <div class="metric-label">Average Wait Time</div>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="metric-card">
+                <mat-card-content>
+                  <div class="metric-value">{{ getLargestPartySize() }}</div>
+                  <div class="metric-label">Largest Party</div>
+                  <div class="metric-icon">
+                    <mat-icon>people</mat-icon>
+                  </div>
                 </mat-card-content>
               </mat-card>
 
@@ -112,6 +132,22 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
                           <div class="customer-contact">
                             <span *ngIf="customer.phone">{{ customer.phone }}</span>
                             <span *ngIf="customer.email">{{ customer.email }}</span>
+                          </div>
+                        </div>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="partySize">
+                      <th mat-header-cell *matHeaderCellDef>Party Size</th>
+                      <td mat-cell *matCellDef="let customer">
+                        <div class="party-size-cell">
+                          <div class="party-indicator" *ngIf="customer.partySize > 1">
+                            <mat-icon class="party-icon">group</mat-icon>
+                            <span class="party-count">{{ customer.partySize }}</span>
+                          </div>
+                          <div class="single-person" *ngIf="customer.partySize <= 1">
+                            <mat-icon class="single-icon">person</mat-icon>
+                            <span class="single-count">1</span>
                           </div>
                         </div>
                       </td>
@@ -257,6 +293,41 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
       margin-bottom: 30px;
     }
 
+    .metric-card {
+      text-align: center;
+      position: relative;
+    }
+
+    .metric-card .mat-card-content {
+      padding: 24px 16px;
+      position: relative;
+    }
+
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #3f51b5;
+      margin-bottom: 8px;
+    }
+
+    .metric-label {
+      font-size: 14px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .metric-icon {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      opacity: 0.3;
+    }
+
+    .metric-icon mat-icon {
+      font-size: 20px;
+      color: #3f51b5;
+    }
+
     .waitlist-card {
       margin-top: 20px;
     }
@@ -302,6 +373,59 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
       font-weight: 500;
     }
 
+    .party-size-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .party-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      border: 1px solid #2196f3;
+      border-radius: 16px;
+      padding: 4px 8px;
+      font-size: 12px;
+      color: #1976d2;
+      font-weight: 500;
+    }
+
+    .party-icon {
+      font-size: 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+      color: #1976d2;
+    }
+
+    .party-count {
+      font-weight: bold;
+    }
+
+    .single-person {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 16px;
+      padding: 4px 8px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .single-icon {
+      font-size: 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+      color: #666;
+    }
+
+    .single-count {
+      font-weight: 500;
+    }
+
     .no-data {
       text-align: center;
       padding: 40px;
@@ -339,6 +463,7 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
 
       .metrics-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
       }
 
       .subscription-actions {
@@ -351,7 +476,7 @@ export class VendorDashboardComponent implements OnInit {
   currentVendor: Vendor | null = null;
   customers: Customer[] = [];
   metrics: WaitlistMetrics | null = null;
-  displayedColumns: string[] = ['position', 'name', 'waitTime', 'status', 'actions'];
+  displayedColumns: string[] = ['position', 'name', 'partySize', 'waitTime', 'status', 'actions'];
 
   constructor(
     private authService: AuthService,
@@ -402,6 +527,17 @@ export class VendorDashboardComponent implements OnInit {
     navigator.clipboard.writeText(link).then(() => {
       this.snackBar.open('Waitlist link copied to clipboard!', 'Close', { duration: 3000 });
     });
+  }
+
+  getTotalPeopleCount(): number {
+    return this.customers.reduce((total, customer) => {
+      return total + (customer.partySize || 1);
+    }, 0);
+  }
+
+  getLargestPartySize(): number {
+    if (this.customers.length === 0) return 0;
+    return Math.max(...this.customers.map(customer => customer.partySize || 1));
   }
 
   notifyCustomer(customer: Customer): void {
