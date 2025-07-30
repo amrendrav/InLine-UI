@@ -1,0 +1,116 @@
+# InLine Waitlist Management - Git Ignore
+
+# =====================================
+# NODE.JS / NPM
+# =====================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+.yarn/
+
+# =====================================
+# ENVIRONMENT VARIABLES & SECRETS
+# =====================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env*
+frontend/.env*
+
+# =====================================
+# ANGULAR FRONTEND
+# =====================================
+dist/
+tmp/
+out-tsc/
+.angular/
+.angular/cache/
+coverage/
+e2e/*.js
+e2e/*.map
+
+# Angular build cache
+.ng_build_cache/
+.ng_pkg_build/
+
+# Angular CLI cache
+.angular/cache/
+angular-cache/
+
+# =====================================
+# NODE.JS BACKEND
+# =====================================
+backend/dist/
+backend/build/
+backend/logs/
+backend/*.log
+
+# =====================================
+# DATABASE
+# =====================================
+*.db
+*.sqlite
+*.sqlite3
+pg_data/
+postgresql/
+dumps/
+*.sql
+
+# =====================================
+# TYPESCRIPT
+# =====================================
+*.tsbuildinfo
+
+# =====================================
+# TESTING
+# =====================================
+coverage/
+*.lcov
+.nyc_output/
+jest-coverage/
+
+# =====================================
+# EDITOR & OS
+# =====================================
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# =====================================
+# SECURITY & CERTIFICATES
+# =====================================
+*.key
+*.pem
+*.crt
+*.csr
+*.p12
+*.pfx
+secrets/
+
+# =====================================
+# BUILD & DEPLOYMENT
+# =====================================
+*.tar.gz
+*.zip
+*.backup
+*.bak
+*.orig
+.cache/
+
+# =====================================
+# DEVELOPMENT TOOLS
+# =====================================
+.eslintcache
+.prettierignore
+.stylelintcache

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InLine Waitlist Management - Test Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        h2 {
+            color: #555;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 InLine Waitlist Management</h1>
+    <p style="text-align: center; color: #666;">Test Interface for API Endpoints</p>
+
+    <!-- Vendor Registration -->
+    <div class="container">
+        <h2>📝 Vendor Registration</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="regEmail">Email:</label>
+                <input type="email" id="regEmail" value="vendor@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="regPassword">Password:</label>
+                <input type="password" id="regPassword" value="password123" required>
+            </div>
+            <div class="form-group">
+                <label for="businessName">Business Name:</label>
+                <input type="text" id="businessName" value="My Coffee Shop" required>
+            </div>
+            <div class="form-group">
+                <label for="contactName">Contact Name:</label>
+                <input type="text" id="contactName" value="John Smith" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone:</label>
+                <input type="tel" id="phone" value="+1234567890" required>
+            </div>
+            <div class="form-group">
+                <label for="subscriptionPlan">Subscription Plan:</label>
+                <select id="subscriptionPlan" required>
+                    <option value="basic">Basic</option>
+                    <option value="professional">Professional</option>
+                    <option value="enterprise">Enterprise</option>
+                </select>
+            </div>
+            <button type="submit">Register Vendor</button>
+        </form>
+        <div id="registerResponse" class="response" style="display: none;"></div>
+    </div>
+
+    <!-- Vendor Login -->
+    <div class="container">
+        <h2>🔐 Vendor Login</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Email:</label>
+                <input type="email" id="loginEmail" value="vendor@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password:</label>
+                <input type="password" id="loginPassword" value="password123" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <div id="loginResponse" class="response" style="display: none;"></div>
+    </div>
+
+    <!-- Customer Join Waitlist -->
+    <div class="container">
+        <h2>👥 Customer Join Waitlist</h2>
+        <form id="joinForm">
+            <div class="form-group">
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" value="Jane" required>
+            </div>
+            <div class="form-group">
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" value="Doe">
+            </div>
+            <div class="form-group">
+                <label for="customerEmail">Email:</label>
+                <input type="email" id="customerEmail" value="jane.doe@example.com">
+            </div>
+            <div class="form-group">
+                <label for="customerPhone">Phone:</label>
+                <input type="tel" id="customerPhone" value="+1987654321">
+            </div>
+            <div class="form-group">
+                <label for="vendorId">Vendor ID:</label>
+                <input type="number" id="vendorId" value="1" required>
+            </div>
+            <button type="submit">Join Waitlist</button>
+        </form>
+        <div id="joinResponse" class="response" style="display: none;"></div>
+    </div>
+
+    <!-- Search Customer -->
+    <div class="container">
+        <h2>🔍 Search Customer</h2>
+        <form id="searchForm">
+            <div class="form-group">
+                <label for="searchIdentifier">Email or Phone:</label>
+                <input type="text" id="searchIdentifier" value="jane.doe@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="searchVendorId">Vendor ID:</label>
+                <input type="number" id="searchVendorId" value="1" required>
+            </div>
+            <button type="submit">Search Customer</button>
+        </form>
+        <div id="searchResponse" class="response" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        let authToken = '';
+
+        // Helper function to make API calls
+        async function apiCall(endpoint, method = 'GET', data = null, requireAuth = false) {
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            
+            if (requireAuth && authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            const config = {
+                method,
+                headers,
+            };
+
+            if (data) {
+                config.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, config);
+                const result = await response.json();
+                return { success: response.ok, data: result, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Display response
+        function displayResponse(elementId, response) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            
+            if (response.success) {
+                element.className = 'response success';
+                element.textContent = JSON.stringify(response.data, null, 2);
+            } else {
+                element.className = 'response error';
+                element.textContent = `Error: ${response.error || JSON.stringify(response.data, null, 2)}`;
+            }
+        }
+
+        // Vendor Registration
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                businessName: document.getElementById('businessName').value,
+                contactName: document.getElementById('contactName').value,
+                phone: document.getElementById('phone').value,
+                subscriptionPlan: document.getElementById('subscriptionPlan').value,
+            };
+            
+            const response = await apiCall('/auth/register', 'POST', data);
+            if (response.success) {
+                authToken = response.data.token;
+            }
+            displayResponse('registerResponse', response);
+        });
+
+        // Vendor Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value,
+            };
+            
+            const response = await apiCall('/auth/login', 'POST', data);
+            if (response.success) {
+                authToken = response.data.token;
+            }
+            displayResponse('loginResponse', response);
+        });
+
+        // Customer Join Waitlist
+        document.getElementById('joinForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('customerEmail').value,
+                phone: document.getElementById('customerPhone').value,
+                vendorId: parseInt(document.getElementById('vendorId').value),
+            };
+            
+            const response = await apiCall('/waitlist/join', 'POST', data);
+            displayResponse('joinResponse', response);
+        });
+
+        // Search Customer
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                identifier: document.getElementById('searchIdentifier').value,
+                vendorId: parseInt(document.getElementById('searchVendorId').value),
+            };
+            
+            const response = await apiCall('/waitlist/search', 'POST', data);
+            displayResponse('searchResponse', response);
+        });
+    </script>
+</body>
+</html>
