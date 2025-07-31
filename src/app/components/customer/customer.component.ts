@@ -140,17 +140,12 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '..
                         </div>
                       </div>
 
-                      <!-- Party Size Icon (Center) -->
+                      <!-- Party Size Icon (Right) -->
                       <div class="party-size-center">
                         <mat-icon class="party-icon-large">
                           {{ customer.partySize === 1 ? 'person' : 'group' }}
                         </mat-icon>
                         <span class="party-count">{{ customer.partySize }}</span>
-                      </div>
-
-                      <!-- Wait Time Section -->
-                      <div class="wait-time-section">
-                        <div class="wait-time-display">~{{ customer.waitTime }} min</div>
                       </div>
                     </div>
                   </div>
@@ -384,7 +379,7 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '..
 
     .waitlist-item {
       display: grid;
-      grid-template-columns: auto 1fr auto 1fr;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
       gap: 16px;
       padding: 16px;
@@ -459,20 +454,6 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '..
       color: #1976d2;
       margin-top: -2px;
       line-height: 1;
-    }
-
-    .wait-time-section {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-    }
-
-    .wait-time-display {
-      font-size: 12px;
-      color: #666;
-      margin: 0;
-      text-align: right;
-      font-weight: 500;
     }
 
     .empty-state {
@@ -870,7 +851,7 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '..
 
       /* Mobile waitlist adjustments */
       .waitlist-item {
-        grid-template-columns: auto 1fr auto auto;
+        grid-template-columns: auto 1fr auto;
         gap: 12px;
         padding: 12px;
       }
@@ -892,10 +873,6 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '..
 
       .customer-name {
         font-size: 14px;
-      }
-
-      .wait-time-display {
-        font-size: 11px;
       }
     }
   `]
