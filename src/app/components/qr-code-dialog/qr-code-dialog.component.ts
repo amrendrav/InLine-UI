@@ -665,16 +665,140 @@ export class QRCodeDialogComponent implements OnInit {
 
   downloadQR(): void {
     try {
+      // Get the print area element which contains the full content
+      const printArea = this.printArea.nativeElement;
       const canvas = this.qrCanvas.nativeElement;
-      const link = document.createElement('a');
-      link.download = `${this.data.businessName.replace(/\s+/g, '_')}_waitlist_qr.png`;
-      link.href = canvas.toDataURL();
-      link.click();
       
-      this.snackBar.open('QR code downloaded!', 'Close', { duration: 2000 });
+      // Create a temporary canvas to draw the complete content
+      const tempCanvas = document.createElement('canvas');
+      const ctx = tempCanvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Could not get canvas context');
+      }
+
+      // Set canvas size (adjust as needed)
+      tempCanvas.width = 600;
+      tempCanvas.height = 800;
+      
+      // Fill background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      
+      // Add border
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, tempCanvas.width - 20, tempCanvas.height - 20);
+      
+      // Business name
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 32px Arial';
+      ctx.textAlign = 'center';
+      const businessName = this.data.businessName.toUpperCase();
+      ctx.fillText(businessName, tempCanvas.width / 2, 80);
+      
+      // Subtitle
+      ctx.font = '20px Arial';
+      ctx.fillStyle = '#333333';
+      ctx.fillText('Scan to join our waitlist', tempCanvas.width / 2, 120);
+      
+      // Draw QR code
+      const qrImageData = canvas.toDataURL('image/png');
+      const qrImage = new Image();
+      
+      qrImage.onload = () => {
+        // Draw QR code centered
+        const qrSize = 250;
+        const qrX = (tempCanvas.width - qrSize) / 2;
+        const qrY = 160;
+        
+        // QR code border
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(qrX - 3, qrY - 3, qrSize + 6, qrSize + 6);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(qrX, qrY, qrSize, qrSize);
+        
+        // Draw QR code
+        ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+        
+        // URL text
+        const urlY = qrY + qrSize + 60;
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(50, urlY - 25, tempCanvas.width - 100, 40);
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(50, urlY - 25, tempCanvas.width - 100, 40);
+        
+        ctx.fillStyle = '#000000';
+        ctx.font = '14px monospace';
+        
+        // Split URL if too long
+        const url = this.data.url;
+        const maxWidth = tempCanvas.width - 120;
+        const urlWords = url.split('');
+        let line = '';
+        let lineY = urlY;
+        
+        for (let n = 0; n < urlWords.length; n++) {
+          const testLine = line + urlWords[n];
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+          
+          if (testWidth > maxWidth && n > 0) {
+            ctx.fillText(line, tempCanvas.width / 2, lineY);
+            line = urlWords[n];
+            lineY += 18;
+          } else {
+            line = testLine;
+          }
+        }
+        ctx.fillText(line, tempCanvas.width / 2, lineY);
+        
+        // Instructions
+        const instructionY = urlY + 80;
+        ctx.font = '18px Arial';
+        ctx.fillStyle = '#000000';
+        ctx.fillText('📱 Point your phone camera at the QR code', tempCanvas.width / 2, instructionY);
+        ctx.fillText('or visit the link above', tempCanvas.width / 2, instructionY + 25);
+        
+        // Footer
+        const footerY = tempCanvas.height - 40;
+        ctx.strokeStyle = '#eee';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(100, footerY - 20);
+        ctx.lineTo(tempCanvas.width - 100, footerY - 20);
+        ctx.stroke();
+        
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#666666';
+        ctx.fillText('Powered by InLine Waitlist Management System', tempCanvas.width / 2, footerY);
+        
+        // Download the complete image
+        const link = document.createElement('a');
+        link.download = `${this.data.businessName.replace(/\s+/g, '_')}_waitlist_complete.png`;
+        link.href = tempCanvas.toDataURL('image/png');
+        link.click();
+        
+        this.snackBar.open('Complete QR code page downloaded!', 'Close', { duration: 2000 });
+      };
+      
+      qrImage.onerror = () => {
+        // Fallback: download just the QR code if image loading fails
+        const canvas = this.qrCanvas.nativeElement;
+        const link = document.createElement('a');
+        link.download = `${this.data.businessName.replace(/\s+/g, '_')}_waitlist_qr.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+        
+        this.snackBar.open('QR code downloaded!', 'Close', { duration: 2000 });
+      };
+      
+      qrImage.src = qrImageData;
+      
     } catch (error) {
-      console.error('Error downloading QR code:', error);
-      this.snackBar.open('Failed to download QR code', 'Close', { duration: 3000 });
+      console.error('Error downloading complete QR page:', error);
+      this.snackBar.open('Failed to download QR page', 'Close', { duration: 3000 });
     }
   }
 }
