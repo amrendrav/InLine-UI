@@ -531,72 +531,73 @@ export class QRCodeDialogComponent implements OnInit {
                   print-color-adjust: exact;
                 }
                 .print-container {
-                  max-width: 500px;
+                  max-width: 700px;
                   margin: 0 auto;
                   background: white;
-                  border: 3px solid #000;
-                  border-radius: 12px;
-                  padding: 30px;
+                  border: 4px solid #000;
+                  border-radius: 16px;
+                  padding: 50px;
                   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                  min-height: 80vh;
                 }
                 .business-header h3 {
-                  margin: 0 0 10px 0;
+                  margin: 0 0 20px 0;
                   color: #000;
-                  font-size: 28px;
+                  font-size: 42px;
                   font-weight: 700;
                   text-transform: uppercase;
-                  letter-spacing: 1px;
+                  letter-spacing: 2px;
                 }
                 .business-header p {
-                  margin: 0 0 30px 0;
+                  margin: 0 0 50px 0;
                   color: #333;
-                  font-size: 18px;
+                  font-size: 24px;
                   font-weight: 500;
                 }
                 .qr-image-wrapper {
-                  margin: 30px 0;
+                  margin: 50px 0;
                   display: flex;
                   justify-content: center;
                 }
                 .qr-image {
-                  width: 220px;
-                  height: 220px;
-                  border: 3px solid #000;
-                  border-radius: 12px;
-                  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                  width: 300px;
+                  height: 300px;
+                  border: 4px solid #000;
+                  border-radius: 16px;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 }
                 .link-text {
-                  font-size: 16px;
+                  font-size: 20px;
                   color: #000;
                   word-break: break-all;
                   background-color: #f5f5f5;
-                  padding: 12px;
-                  border-radius: 8px;
-                  margin: 25px 0;
+                  padding: 20px;
+                  border-radius: 12px;
+                  margin: 40px 0;
                   font-family: 'Courier New', monospace;
-                  border: 2px solid #ddd;
-                  line-height: 1.4;
+                  border: 3px solid #ddd;
+                  line-height: 1.6;
                 }
                 .instructions {
-                  font-size: 16px;
+                  font-size: 22px;
                   color: #000;
-                  margin: 20px 0 0 0;
+                  margin: 30px 0 0 0;
                   font-weight: 500;
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  gap: 8px;
+                  gap: 12px;
                 }
                 .phone-icon {
-                  width: 20px;
-                  height: 20px;
+                  width: 28px;
+                  height: 28px;
                   fill: #000;
                 }
                 .footer {
-                  margin-top: 30px;
-                  padding-top: 20px;
-                  border-top: 2px solid #eee;
-                  font-size: 14px;
+                  margin-top: 50px;
+                  padding-top: 30px;
+                  border-top: 3px solid #eee;
+                  font-size: 18px;
                   color: #666;
                 }
                 
@@ -607,14 +608,15 @@ export class QRCodeDialogComponent implements OnInit {
                   }
                   .print-container {
                     box-shadow: none;
-                    border: 2px solid #000;
+                    border: 3px solid #000;
                     page-break-inside: avoid;
+                    min-height: auto;
                   }
                   .qr-image {
-                    border: 2px solid #000;
+                    border: 3px solid #000;
                   }
                   .link-text {
-                    border: 1px solid #000;
+                    border: 2px solid #000;
                     background-color: #f8f8f8 !important;
                   }
                 }
