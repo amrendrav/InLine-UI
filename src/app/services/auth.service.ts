@@ -4,6 +4,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { AuthResponse, LoginRequest, RegisterRequest, Vendor } from '../models';
 import { environment } from '../../environments/environment';
+import { CookieService } from './cookie.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,13 +13,25 @@ export class AuthService {
   private readonly API_URL = environment.apiUrl;
   private currentVendorSubject = new BehaviorSubject<Vendor | null>(null);
   public currentVendor$ = this.currentVendorSubject.asObservable();
+  
+  private readonly TOKEN_COOKIE_NAME = 'inLine_auth_token';
+  private readonly VENDOR_COOKIE_NAME = 'inLine_vendor_data';
+  private readonly COOKIE_DAYS = 7; // Token expires in 7 days
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private cookieService: CookieService
+  ) {
     // Check for existing token on service initialization
-    const token = localStorage.getItem('token');
-    const vendorData = localStorage.getItem('vendor');
+    const token = this.cookieService.getCookie(this.TOKEN_COOKIE_NAME);
+    const vendorData = this.cookieService.getCookie(this.VENDOR_COOKIE_NAME);
     if (token && vendorData) {
-      this.currentVendorSubject.next(JSON.parse(vendorData));
+      try {
+        this.currentVendorSubject.next(JSON.parse(vendorData));
+      } catch (error) {
+        console.error('Error parsing vendor data from cookie:', error);
+        this.clearAuthData();
+      }
     }
   }
 
@@ -26,9 +39,7 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.API_URL}/auth/login`, credentials)
       .pipe(
         tap(response => {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('vendor', JSON.stringify(response.vendor));
-          this.currentVendorSubject.next(response.vendor);
+          this.storeAuthData(response.token, response.vendor);
         })
       );
   }
@@ -37,21 +48,17 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.API_URL}/auth/register`, registerData)
       .pipe(
         tap(response => {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('vendor', JSON.stringify(response.vendor));
-          this.currentVendorSubject.next(response.vendor);
+          this.storeAuthData(response.token, response.vendor);
         })
       );
   }
 
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('vendor');
-    this.currentVendorSubject.next(null);
+    this.clearAuthData();
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return this.cookieService.getCookie(this.TOKEN_COOKIE_NAME);
   }
 
   isAuthenticated(): boolean {
@@ -61,6 +68,36 @@ export class AuthService {
 
   getCurrentVendor(): Vendor | null {
     return this.currentVendorSubject.value;
+  }
+
+  private storeAuthData(token: string, vendor: Vendor): void {
+    const isProduction = environment.production;
+    
+    // Store token in secure cookie
+    this.cookieService.setCookie(
+      this.TOKEN_COOKIE_NAME, 
+      token, 
+      this.COOKIE_DAYS, 
+      isProduction, // Secure flag - only for HTTPS in production
+      'Lax'
+    );
+    
+    // Store vendor data in cookie (less sensitive)
+    this.cookieService.setCookie(
+      this.VENDOR_COOKIE_NAME, 
+      JSON.stringify(vendor), 
+      this.COOKIE_DAYS, 
+      false, // Not secure since it's not sensitive data
+      'Lax'
+    );
+    
+    this.currentVendorSubject.next(vendor);
+  }
+
+  private clearAuthData(): void {
+    this.cookieService.deleteCookie(this.TOKEN_COOKIE_NAME);
+    this.cookieService.deleteCookie(this.VENDOR_COOKIE_NAME);
+    this.currentVendorSubject.next(null);
   }
 
   private isTokenExpired(token: string): boolean {
