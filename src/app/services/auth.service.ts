@@ -3,12 +3,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { AuthResponse, LoginRequest, RegisterRequest, Vendor } from '../models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:4100/api';
+  private readonly API_URL = environment.apiUrl;
   private currentVendorSubject = new BehaviorSubject<Vendor | null>(null);
   public currentVendor$ = this.currentVendorSubject.asObservable();
 

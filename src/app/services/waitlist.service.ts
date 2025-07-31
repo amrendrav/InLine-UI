@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Customer, CustomerJoinRequest, CustomerSearchRequest, WaitlistMetrics } from '../models';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WaitlistService {
-  private readonly API_URL = 'http://localhost:4100/api';
+  private readonly API_URL = environment.apiUrl;
 
   constructor(
     private http: HttpClient,

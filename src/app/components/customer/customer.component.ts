@@ -100,7 +100,7 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest } from '../../mode
                 <!-- Waitlist Overview -->
                 <div class="waitlist-content" *ngIf="allCustomers.length > 0; else noCustomers">
                   <div class="waitlist-header">
-                    <h3>{{ allCustomers.length }} people in line</h3>
+                    <h3>{{ allCustomers.length }} parties in line</h3>
                     <button mat-icon-button (click)="loadWaitlist()" title="Refresh">
                       <mat-icon>refresh</mat-icon>
                     </button>
@@ -124,11 +124,12 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest } from '../../mode
                       </div>
 
                       <!-- Party Size Icon (Center) -->
-                      <div class="party-size-center" *ngIf="customer.partySize > 1">
-                        <mat-icon class="party-icon-large">group</mat-icon>
+                      <div class="party-size-center">
+                        <mat-icon class="party-icon-large">
+                          {{ customer.partySize === 1 ? 'person' : 'group' }}
+                        </mat-icon>
                         <span class="party-count">{{ customer.partySize }}</span>
                       </div>
-                      <div class="party-size-placeholder" *ngIf="customer.partySize <= 1"></div>
 
                       <!-- Wait Time Section -->
                       <div class="wait-time-section">
@@ -383,12 +384,6 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest } from '../../mode
       color: #1976d2;
       margin-top: -2px;
       line-height: 1;
-    }
-
-    .party-size-placeholder {
-      width: 48px;
-      height: 48px;
-      /* Empty placeholder to maintain grid alignment */
     }
 
     .wait-time-section {
@@ -812,11 +807,6 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest } from '../../mode
 
       .party-count {
         font-size: 9px;
-      }
-
-      .party-size-placeholder {
-        width: 40px;
-        height: 40px;
       }
 
       .customer-name {

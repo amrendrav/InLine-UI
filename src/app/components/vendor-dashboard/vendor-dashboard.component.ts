@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,15 +10,21 @@ import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { AuthService } from '../../services/auth.service';
 import { WaitlistService } from '../../services/waitlist.service';
-import { Customer, WaitlistMetrics, Vendor } from '../../models';
+import { AssetService } from '../../services/asset.service';
+import { Customer, WaitlistMetrics, Vendor, Asset, AssetCreateRequest } from '../../models';
 
 @Component({
   selector: 'app-vendor-dashboard',
   standalone: true,
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -25,7 +32,11 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
     MatTableModule,
     MatChipsModule,
     MatMenuModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule
   ],
   template: `
     <div class="container" *ngIf="currentVendor">
@@ -141,13 +152,9 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
                       <th mat-header-cell *matHeaderCellDef>Party Size</th>
                       <td mat-cell *matCellDef="let customer">
                         <div class="party-size-cell">
-                          <div class="party-indicator" *ngIf="customer.partySize > 1">
-                            <mat-icon class="party-icon">group</mat-icon>
+                          <div class="party-indicator">
+                            <mat-icon class="party-icon">{{ customer.partySize === 1 ? 'person' : 'group' }}</mat-icon>
                             <span class="party-count">{{ customer.partySize }}</span>
-                          </div>
-                          <div class="single-person" *ngIf="customer.partySize <= 1">
-                            <mat-icon class="single-icon">person</mat-icon>
-                            <span class="single-count">1</span>
                           </div>
                         </div>
                       </td>
@@ -224,6 +231,242 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
                   <li>Wait time trends</li>
                   <li>Monthly reports</li>
                 </ul>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Assets">
+          <div class="assets-content">
+            <!-- Asset Summary Cards -->
+            <div class="asset-metrics-grid">
+              <mat-card class="metric-card">
+                <mat-card-content>
+                  <div class="metric-value">{{ assets.length }}</div>
+                  <div class="metric-label">Total Assets</div>
+                  <div class="metric-icon">
+                    <mat-icon>business</mat-icon>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="metric-card">
+                <mat-card-content>
+                  <div class="metric-value">{{ getTotalCapacity() }}</div>
+                  <div class="metric-label">Total Capacity</div>
+                  <div class="metric-icon">
+                    <mat-icon>groups</mat-icon>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="metric-card">
+                <mat-card-content>
+                  <div class="metric-value">{{ getAvailableAssets() }}</div>
+                  <div class="metric-label">Available Assets</div>
+                  <div class="metric-icon">
+                    <mat-icon>check_circle</mat-icon>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="metric-card">
+                <mat-card-content>
+                  <div class="metric-value">{{ getOccupiedAssets() }}</div>
+                  <div class="metric-label">Occupied Assets</div>
+                  <div class="metric-icon">
+                    <mat-icon>people</mat-icon>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <!-- Asset Management -->
+            <mat-card class="assets-card">
+              <mat-card-header>
+                <mat-card-title>Asset Management</mat-card-title>
+                <mat-card-subtitle>Manage your tables, rooms, and other assets</mat-card-subtitle>
+                <button mat-raised-button color="primary" (click)="openAssetForm()">
+                  <mat-icon>add</mat-icon>
+                  Add Asset
+                </button>
+              </mat-card-header>
+              
+              <mat-card-content>
+                <!-- Add Asset Form -->
+                <div class="add-asset-form" *ngIf="showAssetForm">
+                  <form [formGroup]="assetForm" (ngSubmit)="createAsset()" class="asset-form">
+                    <div class="form-row">
+                      <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>Asset Name *</mat-label>
+                        <input matInput formControlName="name" placeholder="e.g., Table 1, VIP Room">
+                        <mat-error *ngIf="assetForm.get('name')?.hasError('required')">
+                          Asset name is required
+                        </mat-error>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>Capacity *</mat-label>
+                        <input matInput type="number" formControlName="capacity" placeholder="Number of people" min="1">
+                        <mat-error *ngIf="assetForm.get('capacity')?.hasError('required')">
+                          Capacity is required
+                        </mat-error>
+                        <mat-error *ngIf="assetForm.get('capacity')?.hasError('min')">
+                          Capacity must be at least 1
+                        </mat-error>
+                      </mat-form-field>
+                    </div>
+
+                    <div class="form-row">
+                      <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>Type</mat-label>
+                        <mat-select formControlName="type">
+                          <mat-option value="table">Table</mat-option>
+                          <mat-option value="room">Room</mat-option>
+                          <mat-option value="booth">Booth</mat-option>
+                          <mat-option value="counter">Counter</mat-option>
+                          <mat-option value="outdoor">Outdoor</mat-option>
+                          <mat-option value="other">Other</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>Category</mat-label>
+                        <mat-select formControlName="category">
+                          <mat-option value="dining">Dining</mat-option>
+                          <mat-option value="vip">VIP</mat-option>
+                          <mat-option value="standard">Standard</mat-option>
+                          <mat-option value="premium">Premium</mat-option>
+                          <mat-option value="family">Family</mat-option>
+                          <mat-option value="business">Business</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+
+                    <div class="form-row">
+                      <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>Status</mat-label>
+                        <mat-select formControlName="status">
+                          <mat-option value="available">Available</mat-option>
+                          <mat-option value="occupied">Occupied</mat-option>
+                          <mat-option value="maintenance">Maintenance</mat-option>
+                          <mat-option value="reserved">Reserved</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+
+                    <mat-form-field appearance="outline" class="form-field full-width">
+                      <mat-label>Description</mat-label>
+                      <textarea matInput formControlName="description" rows="3" 
+                                placeholder="Additional details about this asset"></textarea>
+                    </mat-form-field>
+
+                    <div class="form-actions">
+                      <button mat-button type="button" (click)="cancelAssetForm()">Cancel</button>
+                      <button mat-raised-button color="primary" type="submit" 
+                              [disabled]="!assetForm.valid || isCreatingAsset">
+                        <mat-icon *ngIf="isCreatingAsset">hourglass_empty</mat-icon>
+                        {{ isCreatingAsset ? 'Creating...' : 'Create Asset' }}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Assets Table -->
+                <div class="assets-table">
+                  <table mat-table [dataSource]="assets" class="full-width-table">
+                    <ng-container matColumnDef="name">
+                      <th mat-header-cell *matHeaderCellDef>Name</th>
+                      <td mat-cell *matCellDef="let asset">
+                        <div class="asset-name">
+                          <strong>{{ asset.name }}</strong>
+                          <div class="asset-type" *ngIf="asset.type">{{ asset.type | titlecase }}</div>
+                        </div>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="capacity">
+                      <th mat-header-cell *matHeaderCellDef>Capacity</th>
+                      <td mat-cell *matCellDef="let asset">
+                        <div class="capacity-info">
+                          <mat-icon>groups</mat-icon>
+                          <span>{{ asset.capacity }}</span>
+                        </div>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="category">
+                      <th mat-header-cell *matHeaderCellDef>Category</th>
+                      <td mat-cell *matCellDef="let asset">
+                        <mat-chip-set *ngIf="asset.category">
+                          <mat-chip>{{ asset.category | titlecase }}</mat-chip>
+                        </mat-chip-set>
+                        <span *ngIf="!asset.category">-</span>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="status">
+                      <th mat-header-cell *matHeaderCellDef>Status</th>
+                      <td mat-cell *matCellDef="let asset">
+                        <mat-chip-set>
+                          <mat-chip [color]="getAssetStatusColor(asset.status)" selected>
+                            {{ asset.status | titlecase }}
+                          </mat-chip>
+                        </mat-chip-set>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="description">
+                      <th mat-header-cell *matHeaderCellDef>Description</th>
+                      <td mat-cell *matCellDef="let asset">
+                        <span class="description-text">{{ asset.description || '-' }}</span>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="actions">
+                      <th mat-header-cell *matHeaderCellDef>Actions</th>
+                      <td mat-cell *matCellDef="let asset">
+                        <button mat-icon-button [matMenuTriggerFor]="assetActionMenu">
+                          <mat-icon>more_vert</mat-icon>
+                        </button>
+                        <mat-menu #assetActionMenu="matMenu">
+                          <button mat-menu-item (click)="editAsset(asset)">
+                            <mat-icon>edit</mat-icon>
+                            Edit Asset
+                          </button>
+                          <button mat-menu-item (click)="updateAssetStatus(asset, 'available')" 
+                                  *ngIf="asset.status !== 'available'">
+                            <mat-icon>check_circle</mat-icon>
+                            Mark Available
+                          </button>
+                          <button mat-menu-item (click)="updateAssetStatus(asset, 'occupied')" 
+                                  *ngIf="asset.status !== 'occupied'">
+                            <mat-icon>people</mat-icon>
+                            Mark Occupied
+                          </button>
+                          <button mat-menu-item (click)="updateAssetStatus(asset, 'maintenance')" 
+                                  *ngIf="asset.status !== 'maintenance'">
+                            <mat-icon>build</mat-icon>
+                            Mark Maintenance
+                          </button>
+                          <button mat-menu-item (click)="deleteAsset(asset)" class="delete-action">
+                            <mat-icon>delete</mat-icon>
+                            Delete Asset
+                          </button>
+                        </mat-menu>
+                      </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="assetDisplayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: assetDisplayedColumns;"></tr>
+                  </table>
+
+                  <div class="no-data" *ngIf="assets.length === 0">
+                    <mat-icon>business</mat-icon>
+                    <p>No assets configured</p>
+                    <p>Add your first asset to start managing capacity</p>
+                  </div>
+                </div>
               </mat-card-content>
             </mat-card>
           </div>
@@ -403,29 +646,6 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
       font-weight: bold;
     }
 
-    .single-person {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      background-color: #f5f5f5;
-      border: 1px solid #ddd;
-      border-radius: 16px;
-      padding: 4px 8px;
-      font-size: 12px;
-      color: #666;
-    }
-
-    .single-icon {
-      font-size: 16px !important;
-      width: 16px !important;
-      height: 16px !important;
-      color: #666;
-    }
-
-    .single-count {
-      font-weight: 500;
-    }
-
     .no-data {
       text-align: center;
       padding: 40px;
@@ -449,6 +669,101 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
       flex-wrap: wrap;
     }
 
+    /* Asset Management Styles */
+    .assets-content {
+      padding: 20px 0;
+    }
+
+    .asset-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .assets-card {
+      margin-top: 20px;
+    }
+
+    .add-asset-form {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .asset-form {
+      max-width: 800px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-field {
+      width: 100%;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .assets-table {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .asset-name {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .asset-type {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .capacity-info {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .capacity-info mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #666;
+    }
+
+    .description-text {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+    }
+
+    .delete-action {
+      color: #f44336 !important;
+    }
+
+    .delete-action mat-icon {
+      color: #f44336 !important;
+    }
+
     @media (max-width: 768px) {
       .header {
         flex-direction: column;
@@ -469,21 +784,53 @@ import { Customer, WaitlistMetrics, Vendor } from '../../models';
       .subscription-actions {
         flex-direction: column;
       }
+
+      .asset-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .add-asset-form {
+        padding: 16px;
+      }
     }
   `]
 })
 export class VendorDashboardComponent implements OnInit {
   currentVendor: Vendor | null = null;
   customers: Customer[] = [];
+  assets: Asset[] = [];
   metrics: WaitlistMetrics | null = null;
   displayedColumns: string[] = ['position', 'name', 'partySize', 'waitTime', 'status', 'actions'];
+  assetDisplayedColumns: string[] = ['name', 'capacity', 'category', 'status', 'description', 'actions'];
+  
+  // Asset form management
+  showAssetForm = false;
+  assetForm: FormGroup;
+  isCreatingAsset = false;
+  editingAsset: Asset | null = null;
 
   constructor(
     private authService: AuthService,
     private waitlistService: WaitlistService,
+    private assetService: AssetService,
     private router: Router,
-    private snackBar: MatSnackBar
-  ) {}
+    private snackBar: MatSnackBar,
+    private fb: FormBuilder
+  ) {
+    this.assetForm = this.fb.group({
+      name: ['', Validators.required],
+      capacity: [1, [Validators.required, Validators.min(1)]],
+      type: [''],
+      category: [''],
+      description: [''],
+      status: ['available', Validators.required]
+    });
+  }
 
   ngOnInit(): void {
     this.currentVendor = this.authService.getCurrentVendor();
@@ -513,6 +860,21 @@ export class VendorDashboardComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading metrics:', error);
+      }
+    });
+
+    this.loadAssets();
+  }
+
+  loadAssets(): void {
+    if (!this.currentVendor?.id) return;
+
+    this.assetService.getAssets(this.currentVendor.id).subscribe({
+      next: (assets) => {
+        this.assets = assets;
+      },
+      error: (error) => {
+        console.error('Error loading assets:', error);
       }
     });
   }
@@ -594,5 +956,114 @@ export class VendorDashboardComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/home']);
+  }
+
+  // Asset Management Methods
+  openAssetForm(): void {
+    this.showAssetForm = true;
+    this.editingAsset = null;
+    this.assetForm.reset({
+      name: '',
+      capacity: 1,
+      type: '',
+      category: '',
+      description: '',
+      status: 'available'
+    });
+  }
+
+  cancelAssetForm(): void {
+    this.showAssetForm = false;
+    this.editingAsset = null;
+    this.assetForm.reset();
+  }
+
+  createAsset(): void {
+    if (!this.assetForm.valid || !this.currentVendor?.id) return;
+
+    this.isCreatingAsset = true;
+
+    const assetData: AssetCreateRequest = {
+      ...this.assetForm.value,
+      vendorId: this.currentVendor.id
+    };
+
+    this.assetService.createAsset(assetData).subscribe({
+      next: (asset) => {
+        this.isCreatingAsset = false;
+        this.showAssetForm = false;
+        this.loadAssets();
+        this.snackBar.open('Asset created successfully!', 'Close', { duration: 3000 });
+      },
+      error: (error) => {
+        this.isCreatingAsset = false;
+        this.snackBar.open('Failed to create asset', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  editAsset(asset: Asset): void {
+    this.editingAsset = asset;
+    this.showAssetForm = true;
+    this.assetForm.patchValue({
+      name: asset.name,
+      capacity: asset.capacity,
+      type: asset.type || '',
+      category: asset.category || '',
+      description: asset.description || '',
+      status: asset.status
+    });
+  }
+
+  updateAssetStatus(asset: Asset, newStatus: 'available' | 'occupied' | 'maintenance' | 'reserved'): void {
+    if (!asset.id) return;
+
+    this.assetService.updateAsset(asset.id, { status: newStatus }).subscribe({
+      next: () => {
+        this.loadAssets();
+        this.snackBar.open(`Asset status updated to ${newStatus}`, 'Close', { duration: 3000 });
+      },
+      error: (error) => {
+        this.snackBar.open('Failed to update asset status', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  deleteAsset(asset: Asset): void {
+    if (!asset.id) return;
+
+    if (confirm(`Are you sure you want to delete "${asset.name}"? This action cannot be undone.`)) {
+      this.assetService.deleteAsset(asset.id).subscribe({
+        next: () => {
+          this.loadAssets();
+          this.snackBar.open('Asset deleted successfully', 'Close', { duration: 3000 });
+        },
+        error: (error) => {
+          this.snackBar.open('Failed to delete asset', 'Close', { duration: 3000 });
+        }
+      });
+    }
+  }
+
+  getTotalCapacity(): number {
+    return this.assets.reduce((total, asset) => total + asset.capacity, 0);
+  }
+
+  getAvailableAssets(): number {
+    return this.assets.filter(asset => asset.status === 'available').length;
+  }
+
+  getOccupiedAssets(): number {
+    return this.assets.filter(asset => asset.status === 'occupied').length;
+  }
+
+  getAssetStatusColor(status: string): string {
+    switch (status) {
+      case 'available': return 'primary';
+      case 'occupied': return 'warn';
+      case 'maintenance': return 'accent';
+      case 'reserved': return 'primary';
+      default: return '';
+    }
   }
 }

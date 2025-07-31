@@ -75,6 +75,38 @@ export interface CustomerJoinRequest {
   vendorId: number;
 }
 
+export interface Asset {
+  id?: number;
+  vendorId: number;
+  name: string;
+  capacity: number;
+  type?: string;
+  category?: string;
+  description?: string;
+  status: 'available' | 'occupied' | 'maintenance' | 'reserved';
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface AssetCreateRequest {
+  name: string;
+  capacity: number;
+  type?: string;
+  category?: string;
+  description?: string;
+  status: 'available' | 'occupied' | 'maintenance' | 'reserved';
+  vendorId: number;
+}
+
+export interface AssetUpdateRequest {
+  name?: string;
+  capacity?: number;
+  type?: string;
+  category?: string;
+  description?: string;
+  status?: 'available' | 'occupied' | 'maintenance' | 'reserved';
+}
+
 export interface CustomerSearchRequest {
   identifier: string; // email or phone
   vendorId: number;
