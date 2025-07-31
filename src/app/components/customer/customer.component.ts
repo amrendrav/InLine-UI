@@ -140,17 +140,12 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '..
                         </div>
                       </div>
 
-                      <!-- Party Size Icon (Center) -->
+                      <!-- Party Size Icon (Right) -->
                       <div class="party-size-center">
                         <mat-icon class="party-icon-large">
                           {{ customer.partySize === 1 ? 'person' : 'group' }}
                         </mat-icon>
                         <span class="party-count">{{ customer.partySize }}</span>
-                      </div>
-
-                      <!-- Wait Time Section -->
-                      <div class="wait-time-section">
-                        <div class="wait-time-display">~{{ customer.waitTime }} min</div>
                       </div>
                     </div>
                   </div>
