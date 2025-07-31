@@ -132,10 +132,10 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '..
                       <div class="customer-name-section">
                         <div class="customer-name">
                           <span *ngIf="currentCustomer && customer.id === currentCustomer.id">
-                            {{ customer.firstName }} (You)
+                            {{ customer.firstName }}{{ customer.phone ? ' (...' + customer.phone.slice(-3) + ')' : '' }} (You)
                           </span>
                           <span *ngIf="!currentCustomer || customer.id !== currentCustomer.id">
-                            {{ customer.firstName }}
+                            {{ customer.firstName }}{{ customer.phone ? ' (...' + customer.phone.slice(-3) + ')' : '' }}
                           </span>
                         </div>
                       </div>
@@ -644,7 +644,7 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '..
     .contact-note {
       display: flex;
       align-items: flex-start;
-      gap: 8px;
+      gap: 12px;
       background-color: #e3f2fd;
       padding: 16px;
       border-radius: 4px;
@@ -653,12 +653,18 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '..
     .contact-note mat-icon {
       color: #1976d2;
       margin-top: 2px;
+      flex-shrink: 0;
+      font-size: 20px !important;
+      width: 20px !important;
+      height: 20px !important;
     }
 
     .contact-note p {
       margin: 0;
       font-size: 14px;
       color: #1976d2;
+      line-height: 1.4;
+      flex: 1;
     }
 
     .error-message {
