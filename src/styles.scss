@@ -86,3 +86,60 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   color: #666;
   font-size: 0.9em;
 }
+
+/* QR Code Dialog Styles */
+.qr-dialog-panel {
+  .mat-mdc-dialog-container {
+    padding: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+
+  .mat-mdc-dialog-content {
+    margin: 0;
+    padding: 0;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+.qr-dialog-backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Mobile-specific dialog styles */
+@media (max-width: 600px) {
+  .qr-dialog-panel {
+    .mat-mdc-dialog-container {
+      margin: 16px;
+      max-height: calc(100vh - 32px);
+      max-width: calc(100vw - 32px);
+      min-width: 280px;
+      border-radius: 8px;
+    }
+  }
+}
+
+/* Ensure modal centers properly on all screen sizes */
+.cdk-global-overlay-wrapper {
+  display: flex;
+  position: absolute;
+  z-index: 1000;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.cdk-overlay-pane {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+  z-index: 1000;
+  display: flex;
+  max-width: 100%;
+  max-height: 100%;
+}

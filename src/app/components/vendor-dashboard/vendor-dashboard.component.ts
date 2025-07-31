@@ -18,6 +18,7 @@ import { AuthService } from '../../services/auth.service';
 import { WaitlistService } from '../../services/waitlist.service';
 import { AssetService } from '../../services/asset.service';
 import { Customer, WaitlistMetrics, Vendor, Asset, AssetCreateRequest } from '../../models';
+import { QRCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.component';
 
 @Component({
   selector: 'app-vendor-dashboard',
@@ -44,8 +45,8 @@ import { Customer, WaitlistMetrics, Vendor, Asset, AssetCreateRequest } from '..
         <h1>{{ currentVendor.businessName }} Dashboard</h1>
         <div class="header-actions">
           <button mat-raised-button color="accent" (click)="copyWaitlistLink()">
-            <mat-icon>link</mat-icon>
-            Share Waitlist Link
+            <mat-icon>qr_code</mat-icon>
+            Show QR Code
           </button>
           <button mat-button [matMenuTriggerFor]="menu">
             <mat-icon>account_circle</mat-icon>
@@ -820,7 +821,8 @@ export class VendorDashboardComponent implements OnInit {
     private assetService: AssetService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private dialog: MatDialog
   ) {
     this.assetForm = this.fb.group({
       name: ['', Validators.required],
@@ -886,8 +888,26 @@ export class VendorDashboardComponent implements OnInit {
 
   copyWaitlistLink(): void {
     const link = `${window.location.origin}/customer/${this.currentVendor?.id}`;
-    navigator.clipboard.writeText(link).then(() => {
-      this.snackBar.open('Waitlist link copied to clipboard!', 'Close', { duration: 3000 });
+    
+    const dialogRef = this.dialog.open(QRCodeDialogComponent, {
+      width: '550px',
+      maxWidth: '95vw',
+      minWidth: '320px',
+      maxHeight: '95vh',
+      data: {
+        url: link,
+        businessName: this.currentVendor?.businessName || 'Business'
+      },
+      panelClass: 'qr-dialog-panel',
+      disableClose: false,
+      hasBackdrop: true,
+      backdropClass: 'qr-dialog-backdrop',
+      autoFocus: false,
+      restoreFocus: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      // Optional: Handle any actions after dialog closes
     });
   }
 
