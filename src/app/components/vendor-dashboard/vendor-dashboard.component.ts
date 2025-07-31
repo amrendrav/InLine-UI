@@ -847,7 +847,7 @@ export class VendorDashboardComponent implements OnInit {
   loadDashboardData(): void {
     if (!this.currentVendor?.id) return;
 
-    this.waitlistService.getWaitlist(this.currentVendor.id).subscribe({
+    this.waitlistService.getWaitlistForVendor(this.currentVendor.id).subscribe({
       next: (customers) => {
         this.customers = customers;
       },

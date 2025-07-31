@@ -11,7 +11,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { WaitlistService } from '../../services/waitlist.service';
-import { Customer, CustomerJoinRequest, CustomerSearchRequest } from '../../models';
+import { VendorService } from '../../services/vendor.service';
+import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '../../models';
 
 @Component({
   selector: 'app-customer',
@@ -30,6 +31,22 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest } from '../../mode
   ],
   template: `
     <div class="container">
+      <!-- Vendor Information Card -->
+      <mat-card class="vendor-card" *ngIf="currentVendor">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>business</mat-icon>
+          <mat-card-title>{{ currentVendor.businessName }}</mat-card-title>
+        </mat-card-header>
+      </mat-card>
+
+      <!-- Loading State for Vendor -->
+      <mat-card class="vendor-card" *ngIf="isLoadingVendor">
+        <mat-card-content class="loading-content">
+          <mat-spinner diameter="30"></mat-spinner>
+          <p>Loading business information...</p>
+        </mat-card-content>
+      </mat-card>
+
       <!-- Customer Status Display (if found) -->
       <mat-card class="status-card" *ngIf="currentCustomer">
         <mat-card-header>
@@ -257,6 +274,64 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest } from '../../mode
       max-width: 600px;
       margin: 0 auto;
       padding: 20px;
+    }
+
+    /* Vendor Card Styles */
+    .vendor-card {
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .vendor-card .mat-mdc-card-header {
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 16px;
+      min-height: auto !important;
+    }
+
+    .vendor-card .mat-mdc-card-header .mat-mdc-card-title {
+      color: white;
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 !important;
+      line-height: 48px !important;
+      display: flex !important;
+      align-items: center !important;
+      height: 48px !important;
+    }
+
+    .vendor-card mat-icon[mat-card-avatar] {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 24px !important;
+      width: 48px !important;
+      height: 48px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 50% !important;
+      line-height: 48px !important;
+      flex-shrink: 0 !important;
+      margin: 0 !important;
+    }
+
+    .loading-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .loading-content p {
+      margin: 0;
+      color: #666;
     }
 
     .status-card, .tabs-card {
@@ -821,6 +896,7 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest } from '../../mode
 })
 export class CustomerComponent implements OnInit {
   vendorId: number | null = null;
+  currentVendor: Vendor | null = null;
   currentCustomer: Customer | null = null;
   allCustomers: Customer[] = [];
   selectedTabIndex = 0; // Tab index for tab navigation
@@ -830,6 +906,7 @@ export class CustomerComponent implements OnInit {
   
   isSearching = false;
   isJoining = false;
+  isLoadingVendor = false;
   errorMessage = '';
 
   constructor(
@@ -837,6 +914,7 @@ export class CustomerComponent implements OnInit {
     private router: Router,
     private fb: FormBuilder,
     private waitlistService: WaitlistService,
+    private vendorService: VendorService,
     private snackBar: MatSnackBar
   ) {
     this.searchForm = this.fb.group({
@@ -860,7 +938,30 @@ export class CustomerComponent implements OnInit {
       return;
     }
 
+    this.loadVendorInfo();
     this.loadWaitlist();
+  }
+
+  loadVendorInfo(): void {
+    if (!this.vendorId) return;
+
+    this.isLoadingVendor = true;
+    this.vendorService.getVendorById(this.vendorId).subscribe({
+      next: (vendor) => {
+        this.isLoadingVendor = false;
+        this.currentVendor = vendor;
+      },
+      error: (error) => {
+        this.isLoadingVendor = false;
+        console.error('Error loading vendor info:', error);
+        this.snackBar.open('Business information could not be loaded', 'Close', { duration: 3000 });
+        
+        // If vendor doesn't exist, redirect to home
+        if (error.status === 404) {
+          this.router.navigate(['/home']);
+        }
+      }
+    });
   }
 
   searchCustomer(): void {

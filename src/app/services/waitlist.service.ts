@@ -26,6 +26,10 @@ export class WaitlistService {
   }
 
   getWaitlist(vendorId: number): Observable<Customer[]> {
+    return this.http.get<Customer[]>(`${this.API_URL}/waitlist/${vendorId}`);
+  }
+
+  getWaitlistForVendor(vendorId: number): Observable<Customer[]> {
     const headers = this.authService.getAuthHeaders();
     return this.http.get<Customer[]>(`${this.API_URL}/waitlist/${vendorId}`, { headers });
   }

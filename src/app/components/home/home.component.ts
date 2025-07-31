@@ -123,7 +123,18 @@ import { CommonModule } from '@angular/common';
 
     .feature-card {
       padding: 20px;
-      height: fit-content;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .feature-card mat-card-content {
+      flex-grow: 1;
+    }
+
+    .feature-card mat-card-actions {
+      margin-top: auto;
     }
 
     .feature-card ul {
