@@ -15,8 +15,8 @@ import { filter } from 'rxjs/operators';
       <mat-icon>queue</mat-icon>
       <span style="margin-left: 8px;">InLine</span>
       <span class="spacer"></span>
-      <button mat-button routerLink="/home" *ngIf="!isCustomerPage">Home</button>
-      <button mat-button routerLink="/vendor/login" *ngIf="!isCustomerPage">Vendor Login</button>
+      <!-- <button mat-button routerLink="/home" *ngIf="!isCustomerPage">Home</button>
+      <button mat-button routerLink="/vendor/login" *ngIf="!isCustomerPage">Vendor Login</button> -->
     </mat-toolbar>
     
     <main>
@@ -36,14 +36,14 @@ import { filter } from 'rxjs/operators';
 })
 export class AppComponent {
   title = 'InLine - Waitlist Management System';
-  isCustomerPage = true;
+  //isCustomerPage = true;
 
   constructor(private router: Router) {
     // Listen to route changes to determine if we're on a customer page
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: NavigationEnd) => {
-      this.isCustomerPage = event.url.startsWith('/customer');
-    });
+    // this.router.events.pipe(
+    //   filter(event => event instanceof NavigationEnd)
+    // ).subscribe((event: NavigationEnd) => {
+    //   this.isCustomerPage = event.url.startsWith('/customer');
+    // });
   }
 }
