@@ -118,7 +118,7 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest } from '../../mode
                             {{ customer.firstName }} (You)
                           </span>
                           <span *ngIf="!currentCustomer || customer.id !== currentCustomer.id">
-                            {{ getAnonymizedName(customer.firstName) }}
+                            {{ customer.firstName }}
                           </span>
                         </div>
                       </div>
@@ -976,10 +976,5 @@ export class CustomerComponent implements OnInit {
       case 'served': return 'check_circle';
       default: return 'info';
     }
-  }
-
-  getAnonymizedName(firstName: string): string {
-    // Show only first letter followed by asterisks for privacy
-    return firstName.charAt(0) + '***';
   }
 }
