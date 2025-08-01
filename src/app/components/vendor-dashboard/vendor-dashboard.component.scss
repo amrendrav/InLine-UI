@@ -201,6 +201,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 16px;
+
+  &.single-column {
+    grid-template-columns: 1fr;
+  }
 }
 
 .form-field {
@@ -216,6 +220,12 @@
   justify-content: flex-end;
   gap: 16px;
   margin-top: 20px;
+}
+
+.apply-to-all-checkbox {
+  margin-bottom: 16px;
+  color: #666;
+  font-size: 14px;
 }
 
 .assets-table {

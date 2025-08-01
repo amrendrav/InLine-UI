@@ -89,13 +89,14 @@ export interface Asset {
 }
 
 export interface AssetCreateRequest {
-  name: string;
-  capacity: number;
+  category: string; // Now required
+  name?: string; // Now optional
+  capacity?: number; // Now optional
   type?: string;
-  category?: string;
   description?: string;
   status: 'available' | 'occupied' | 'maintenance' | 'reserved';
   vendorId: number;
+  applyToAll?: boolean; // New field for applying to all assets in category
 }
 
 export interface AssetUpdateRequest {
