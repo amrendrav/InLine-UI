@@ -305,6 +305,8 @@ import { QRCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.componen
                       <mat-form-field appearance="outline" class="form-field">
                         <mat-label>Category *</mat-label>
                         <mat-select formControlName="category">
+                        <mat-option value="indoor">Indoor</mat-option>
+                        <mat-option value="outdoor">Outdoor</mat-option>
                           <mat-option value="dining">Dining</mat-option>
                           <mat-option value="vip">VIP</mat-option>
                           <mat-option value="standard">Standard</mat-option>
@@ -348,7 +350,6 @@ import { QRCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.componen
                           <mat-option value="room">Room</mat-option>
                           <mat-option value="booth">Booth</mat-option>
                           <mat-option value="counter">Counter</mat-option>
-                          <mat-option value="outdoor">Outdoor</mat-option>
                           <mat-option value="other">Other</mat-option>
                         </mat-select>
                       </mat-form-field>
