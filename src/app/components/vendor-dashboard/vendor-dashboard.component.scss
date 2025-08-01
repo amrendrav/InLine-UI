@@ -194,13 +194,18 @@
 
 .asset-form {
   max-width: 800px;
+
+  ::ng-deep mat-form-field {
+    margin-bottom: 0;
+    margin-top: 0;
+  }
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 
   &.single-column {
     grid-template-columns: 1fr;
@@ -209,6 +214,7 @@
 
 .form-field {
   width: 100%;
+  margin-bottom: 4px;
 }
 
 .full-width {
@@ -219,12 +225,12 @@
   display: flex;
   justify-content: flex-end;
   gap: 16px;
-  margin-top: 20px;
+  margin-top: 8px;
 }
 
 .apply-to-all-checkbox {
-  margin-bottom: 16px;
-  color: #666;
+margin-bottom: 8px;
+color: #666;
   font-size: 14px;
 }
 
