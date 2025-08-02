@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { NgxMaskDirective } from 'ngx-mask';
 import { WaitlistService } from '../../services/waitlist.service';
 import { VendorService } from '../../services/vendor.service';
 import { AssetService } from '../../services/asset.service';
@@ -30,7 +31,8 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor, Asset } f
     MatProgressSpinnerModule,
     MatIconModule,
     MatSnackBarModule,
-    MatTabsModule
+    MatTabsModule,
+    NgxMaskDirective
   ],
   template: `
     <div class="container">
@@ -217,6 +219,7 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor, Asset } f
                     <mat-form-field appearance="outline" class="form-field">
                       <mat-label>Phone Number</mat-label>
                       <input matInput formControlName="phone" 
+                             mask="(000) 000-0000"
                              placeholder="(555) 123-4567">
                     </mat-form-field>
 
