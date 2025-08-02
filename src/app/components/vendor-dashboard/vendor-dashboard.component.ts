@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -164,7 +164,7 @@ import { QRCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.componen
                     <ng-container matColumnDef="waitTime">
                       <th mat-header-cell *matHeaderCellDef>Wait Time</th>
                       <td mat-cell *matCellDef="let customer">
-                        <div class="wait-time">{{ customer.waitTime }}min</div>
+                        <div class="wait-time" [title]="getJoinedDateTooltip(customer)">{{ getWaitingTime(customer) }}</div>
                       </td>
                     </ng-container>
 
@@ -503,7 +503,7 @@ import { QRCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.componen
   `,
   styleUrls: ['./vendor-dashboard.component.scss']
 })
-export class VendorDashboardComponent implements OnInit {
+export class VendorDashboardComponent implements OnInit, OnDestroy {
   currentVendor: Vendor | null = null;
   customers: Customer[] = [];
   assets: Asset[] = [];
@@ -516,6 +516,9 @@ export class VendorDashboardComponent implements OnInit {
   assetForm: FormGroup;
   isCreatingAsset = false;
   editingAsset: Asset | null = null;
+  
+  // Timer for updating wait times
+  private waitTimeUpdateInterval: any;
 
   constructor(
     private authService: AuthService,
@@ -524,7 +527,8 @@ export class VendorDashboardComponent implements OnInit {
     private router: Router,
     private snackBar: MatSnackBar,
     private fb: FormBuilder,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {
     this.assetForm = this.fb.group({
       name: ['', Validators.required],
@@ -544,6 +548,18 @@ export class VendorDashboardComponent implements OnInit {
     }
 
     this.loadDashboardData();
+    
+    // Update wait times every minute
+    this.waitTimeUpdateInterval = setInterval(() => {
+      // Trigger change detection to update the displayed wait times
+      this.cdr.detectChanges();
+    }, 60000); // 60 seconds
+  }
+
+  ngOnDestroy(): void {
+    if (this.waitTimeUpdateInterval) {
+      clearInterval(this.waitTimeUpdateInterval);
+    }
   }
 
   loadDashboardData(): void {
@@ -622,6 +638,44 @@ export class VendorDashboardComponent implements OnInit {
   getLargestPartySize(): number {
     if (this.customers.length === 0) return 0;
     return Math.max(...this.customers.map(customer => customer.partySize || 1));
+  }
+
+  getWaitingTime(customer: Customer): string {
+    if (!customer.joinedAt) return '0 min';
+    
+    const joinedTime = new Date(customer.joinedAt);
+    const currentTime = new Date();
+    const diffInMilliseconds = currentTime.getTime() - joinedTime.getTime();
+    const totalMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
+    
+    if (totalMinutes < 0) return '0 min';
+    
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+    const minutes = totalMinutes % 60;
+    
+    if (days > 0) {
+      if (hours > 0) {
+        return `${days} day${days > 1 ? 's' : ''} ${hours} hour${hours > 1 ? 's' : ''}`;
+      }
+      return `${days} day${days > 1 ? 's' : ''}`;
+    }
+    
+    if (hours > 0) {
+      if (minutes > 0) {
+        return `${hours} hour${hours > 1 ? 's' : ''} ${minutes} min`;
+      }
+      return `${hours} hour${hours > 1 ? 's' : ''}`;
+    }
+    
+    return `${minutes} min`;
+  }
+
+  getJoinedDateTooltip(customer: Customer): string {
+    if (!customer.joinedAt) return 'No join time available';
+    
+    const joinedTime = new Date(customer.joinedAt);
+    return `Joined: ${joinedTime.toLocaleString()}`;
   }
 
   notifyCustomer(customer: Customer): void {
