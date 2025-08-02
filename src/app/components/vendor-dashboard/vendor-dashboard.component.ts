@@ -115,6 +115,20 @@ import { QRCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.componen
                   <div class="metric-label">Current Wait Time</div>
                 </mat-card-content>
               </mat-card>
+
+              <!-- Dynamic Preference Cards -->
+              <mat-card class="metric-card preference-card" 
+                        *ngFor="let preference of getDistinctPreferences()" 
+                        [ngClass]="'preference-' + preference.name.toLowerCase()">
+                <mat-card-content>
+                  <div class="metric-value">{{ preference.count }}</div>
+                  <div class="metric-label">{{ preference.name | titlecase }}</div>
+                  <div class="metric-icon">
+                    <mat-icon>{{ getPreferenceIcon(preference.name) }}</mat-icon>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
             </div>
 
             <!-- Current Waitlist -->
@@ -159,6 +173,15 @@ import { QRCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.componen
                             <mat-icon class="party-icon">{{ customer.partySize === 1 ? 'person' : 'group' }}</mat-icon>
                             <span class="party-count">{{ customer.partySize }}</span>
                           </div>
+                        </div>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="preference">
+                      <th mat-header-cell *matHeaderCellDef>Preference</th>
+                      <td mat-cell *matCellDef="let customer">
+                        <div class="preference-cell">
+                          <span class="preference-text">{{ customer.preference || '-' }}</span>
                         </div>
                       </td>
                     </ng-container>
@@ -517,7 +540,7 @@ export class VendorDashboardComponent implements OnInit, OnDestroy {
   customers: Customer[] = [];
   assets: Asset[] = [];
   metrics: WaitlistMetrics | null = null;
-  displayedColumns: string[] = ['position', 'name', 'partySize', 'waitTime', 'status', 'actions'];
+  displayedColumns: string[] = ['position', 'name', 'partySize', 'preference', 'waitTime', 'status', 'actions'];
   assetDisplayedColumns: string[] = ['category', 'name', 'capacity', 'status', 'description', 'actions'];
   
   // Asset form management
@@ -648,6 +671,37 @@ export class VendorDashboardComponent implements OnInit, OnDestroy {
   getLargestPartySize(): number {
     if (this.customers.length === 0) return 0;
     return Math.max(...this.customers.map(customer => customer.partySize || 1));
+  }
+
+  getDistinctPreferences(): { name: string, count: number }[] {
+    // Filter customers with non-null preferences
+    const customersWithPreferences = this.customers.filter(customer => 
+      customer.preference && customer.preference.trim() !== ''
+    );
+
+    // Count occurrences of each preference
+    const preferenceCounts = customersWithPreferences.reduce((acc, customer) => {
+      const preference = customer.preference!.toLowerCase().trim();
+      acc[preference] = (acc[preference] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Convert to array of objects and sort by count (descending)
+    return Object.entries(preferenceCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  getPreferenceIcon(preference: string): string {
+    const pref = preference.toLowerCase();
+    switch (pref) {
+      case 'outdoor':
+        return 'wb_sunny';
+      case 'indoor':
+        return 'home';
+      default:
+        return 'place';
+    }
   }
 
   getWaitingTime(customer: Customer): string {
