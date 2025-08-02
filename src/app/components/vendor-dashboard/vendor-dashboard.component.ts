@@ -14,6 +14,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../../services/auth.service';
 import { WaitlistService } from '../../services/waitlist.service';
 import { AssetService } from '../../services/asset.service';
@@ -37,7 +38,8 @@ import { QRCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.componen
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule
+    MatSelectModule,
+    MatCheckboxModule
   ],
   template: `
     <div class="container" *ngIf="currentVendor">
@@ -294,24 +296,46 @@ import { QRCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.componen
               </mat-card-header>
               
               <mat-card-content>
-                <!-- Add Asset Form -->
+                <!-- Add/Edit Asset Form -->
                 <div class="add-asset-form" *ngIf="showAssetForm">
+                  <h3>{{ editingAsset ? 'Edit Asset' : 'Add New Asset' }}</h3>
                   <form [formGroup]="assetForm" (ngSubmit)="createAsset()" class="asset-form">
+                    <!-- Category field first and mandatory -->
+                    <div class="form-row single-column">
+                      <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>Category *</mat-label>
+                        <mat-select formControlName="category">
+                        <mat-option value="indoor">Indoor</mat-option>
+                        <mat-option value="outdoor">Outdoor</mat-option>
+                          <mat-option value="dining">Dining</mat-option>
+                          <mat-option value="vip">VIP</mat-option>
+                          <mat-option value="standard">Standard</mat-option>
+                          <mat-option value="premium">Premium</mat-option>
+                          <mat-option value="family">Family</mat-option>
+                          <mat-option value="business">Business</mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="assetForm.get('category')?.hasError('required')">
+                          Category is required
+                        </mat-error>
+                      </mat-form-field>
+                    </div>
+
+                    <!-- Apply to all assets in category checkbox (only show when editing existing asset) -->
+                    <div class="form-row single-column" *ngIf="editingAsset">
+                      <mat-checkbox formControlName="applyToAll" class="apply-to-all-checkbox">
+                        Apply these settings to all assets in this category
+                      </mat-checkbox>
+                    </div>
+
                     <div class="form-row">
                       <mat-form-field appearance="outline" class="form-field">
-                        <mat-label>Asset Name *</mat-label>
+                        <mat-label>Asset Name</mat-label>
                         <input matInput formControlName="name" placeholder="e.g., Table 1, VIP Room">
-                        <mat-error *ngIf="assetForm.get('name')?.hasError('required')">
-                          Asset name is required
-                        </mat-error>
                       </mat-form-field>
 
                       <mat-form-field appearance="outline" class="form-field">
-                        <mat-label>Capacity *</mat-label>
+                        <mat-label>Capacity</mat-label>
                         <input matInput type="number" formControlName="capacity" placeholder="Number of people" min="1">
-                        <mat-error *ngIf="assetForm.get('capacity')?.hasError('required')">
-                          Capacity is required
-                        </mat-error>
                         <mat-error *ngIf="assetForm.get('capacity')?.hasError('min')">
                           Capacity must be at least 1
                         </mat-error>
@@ -326,25 +350,10 @@ import { QRCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.componen
                           <mat-option value="room">Room</mat-option>
                           <mat-option value="booth">Booth</mat-option>
                           <mat-option value="counter">Counter</mat-option>
-                          <mat-option value="outdoor">Outdoor</mat-option>
                           <mat-option value="other">Other</mat-option>
                         </mat-select>
                       </mat-form-field>
 
-                      <mat-form-field appearance="outline" class="form-field">
-                        <mat-label>Category</mat-label>
-                        <mat-select formControlName="category">
-                          <mat-option value="dining">Dining</mat-option>
-                          <mat-option value="vip">VIP</mat-option>
-                          <mat-option value="standard">Standard</mat-option>
-                          <mat-option value="premium">Premium</mat-option>
-                          <mat-option value="family">Family</mat-option>
-                          <mat-option value="business">Business</mat-option>
-                        </mat-select>
-                      </mat-form-field>
-                    </div>
-
-                    <div class="form-row">
                       <mat-form-field appearance="outline" class="form-field">
                         <mat-label>Status</mat-label>
                         <mat-select formControlName="status">
@@ -367,7 +376,7 @@ import { QRCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.componen
                       <button mat-raised-button color="primary" type="submit" 
                               [disabled]="!assetForm.valid || isCreatingAsset">
                         <mat-icon *ngIf="isCreatingAsset">hourglass_empty</mat-icon>
-                        {{ isCreatingAsset ? 'Creating...' : 'Create Asset' }}
+                        {{ isCreatingAsset ? (editingAsset ? 'Updating...' : 'Creating...') : (editingAsset ? 'Update Asset' : 'Create Asset') }}
                       </button>
                     </div>
                   </form>
@@ -509,7 +518,7 @@ export class VendorDashboardComponent implements OnInit, OnDestroy {
   assets: Asset[] = [];
   metrics: WaitlistMetrics | null = null;
   displayedColumns: string[] = ['position', 'name', 'partySize', 'waitTime', 'status', 'actions'];
-  assetDisplayedColumns: string[] = ['name', 'capacity', 'category', 'status', 'description', 'actions'];
+  assetDisplayedColumns: string[] = ['category', 'name', 'capacity', 'status', 'description', 'actions'];
   
   // Asset form management
   showAssetForm = false;
@@ -531,10 +540,11 @@ export class VendorDashboardComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {
     this.assetForm = this.fb.group({
-      name: ['', Validators.required],
-      capacity: [1, [Validators.required, Validators.min(1)]],
+      category: ['', Validators.required], // Category is now mandatory and first
+      applyToAll: [false], // New checkbox field for applying to all assets in category
+      name: [''], // No longer required
+      capacity: [1, Validators.min(1)], // No longer required, but still has min validation
       type: [''],
-      category: [''],
       description: [''],
       status: ['available', Validators.required]
     });
@@ -739,10 +749,11 @@ export class VendorDashboardComponent implements OnInit, OnDestroy {
     this.showAssetForm = true;
     this.editingAsset = null;
     this.assetForm.reset({
-      name: '',
-      capacity: 1,
+      category: '', // Required field
+      applyToAll: false, // Default to false
+      name: '', // Optional
+      capacity: 1, // Optional, but has a default
       type: '',
-      category: '',
       description: '',
       status: 'available'
     });
@@ -759,9 +770,23 @@ export class VendorDashboardComponent implements OnInit, OnDestroy {
 
     this.isCreatingAsset = true;
 
+    const formValue = this.assetForm.value;
+
+    // If editing an existing asset
+    if (this.editingAsset?.id) {
+      this.updateAsset();
+      return;
+    }
+
+    // Creating a new asset
     const assetData: AssetCreateRequest = {
-      ...this.assetForm.value,
-      vendorId: this.currentVendor.id
+      vendorId: this.currentVendor.id,
+      category: formValue.category,
+      name: formValue.name || '', // Send empty string if no name provided
+      capacity: formValue.capacity,
+      type: formValue.type,
+      description: formValue.description,
+      status: formValue.status
     };
 
     this.assetService.createAsset(assetData).subscribe({
@@ -778,14 +803,52 @@ export class VendorDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  updateAsset(): void {
+    if (!this.assetForm.valid || !this.editingAsset?.id) return;
+
+    this.isCreatingAsset = true;
+
+    const formValue = this.assetForm.value;
+    const updateData = {
+      name: formValue.name || '', // Send empty string if no name provided
+      capacity: formValue.capacity,
+      type: formValue.type,
+      category: formValue.category,
+      description: formValue.description,
+      status: formValue.status,
+      applyToAll: formValue.applyToAll
+    };
+
+    this.assetService.updateAsset(this.editingAsset.id, updateData).subscribe({
+      next: (response: any) => {
+        this.isCreatingAsset = false;
+        this.showAssetForm = false;
+        this.editingAsset = null;
+        this.loadAssets();
+        
+        // Show different messages based on whether "apply to all" was used
+        if (formValue.applyToAll && response.updatedCount > 1) {
+          this.snackBar.open(`Updated ${response.updatedCount} assets in category "${formValue.category}"!`, 'Close', { duration: 3000 });
+        } else {
+          this.snackBar.open('Asset updated successfully!', 'Close', { duration: 3000 });
+        }
+      },
+      error: (error) => {
+        this.isCreatingAsset = false;
+        this.snackBar.open('Failed to update asset', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
   editAsset(asset: Asset): void {
     this.editingAsset = asset;
     this.showAssetForm = true;
     this.assetForm.patchValue({
+      category: asset.category || '',
+      applyToAll: false, // Always false when editing
       name: asset.name,
       capacity: asset.capacity,
       type: asset.type || '',
-      category: asset.category || '',
       description: asset.description || '',
       status: asset.status
     });

@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,7 +13,8 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { WaitlistService } from '../../services/waitlist.service';
 import { VendorService } from '../../services/vendor.service';
-import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '../../models';
+import { AssetService } from '../../services/asset.service';
+import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor, Asset } from '../../models';
 
 @Component({
   selector: 'app-customer',
@@ -23,6 +25,7 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '..
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatProgressSpinnerModule,
     MatIconModule,
@@ -235,6 +238,16 @@ import { Customer, CustomerJoinRequest, CustomerSearchRequest, Vendor } from '..
                   </div>
 
                   <mat-form-field appearance="outline" class="form-field">
+                    <mat-label>Preference (Optional)</mat-label>
+                    <mat-select formControlName="preference">
+                      <mat-option value="">No preference</mat-option>
+                      <mat-option *ngFor="let category of availableCategories" [value]="category">
+                        {{category | titlecase}}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="form-field">
                     <mat-label>Email (Optional)</mat-label>
                     <input matInput type="email" formControlName="email">
                     <mat-error *ngIf="joinForm.get('email')?.hasError('email')">
@@ -272,6 +285,7 @@ export class CustomerComponent implements OnInit {
   currentCustomer: Customer | null = null;
   allCustomers: Customer[] = [];
   selectedTabIndex = 0; // Tab index for tab navigation
+  availableCategories: string[] = [];
   
   searchForm: FormGroup;
   joinForm: FormGroup;
@@ -287,6 +301,7 @@ export class CustomerComponent implements OnInit {
     private fb: FormBuilder,
     private waitlistService: WaitlistService,
     private vendorService: VendorService,
+    private assetService: AssetService,
     private snackBar: MatSnackBar
   ) {
     this.searchForm = this.fb.group({
@@ -298,7 +313,8 @@ export class CustomerComponent implements OnInit {
       lastName: [''],
       phone: [''],
       email: ['', Validators.email],
-      partySize: [1, [Validators.required, Validators.min(1), Validators.max(20)]]
+      partySize: [1, [Validators.required, Validators.min(1), Validators.max(20)]],
+      preference: ['']
     });
   }
 
@@ -312,6 +328,7 @@ export class CustomerComponent implements OnInit {
 
     this.loadVendorInfo();
     this.loadWaitlist();
+    this.loadAvailableCategories();
   }
 
   loadVendorInfo(): void {
@@ -432,6 +449,23 @@ export class CustomerComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading waitlist:', error);
+      }
+    });
+  }
+
+  loadAvailableCategories(): void {
+    if (!this.vendorId) return;
+
+    this.assetService.getAssets(this.vendorId).subscribe({
+      next: (assets: Asset[]) => {
+        // Extract unique categories from assets
+        const categories = [...new Set(assets.map(asset => asset.category).filter(Boolean))];
+        this.availableCategories = categories as string[];
+      },
+      error: (error) => {
+        console.error('Error loading asset categories:', error);
+        // Fallback to default categories if API fails
+        this.availableCategories = ['dining', 'vip', 'standard', 'premium', 'family', 'business', 'indoor', 'outdoor'];
       }
     });
   }

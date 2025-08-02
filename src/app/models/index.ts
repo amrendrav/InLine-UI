@@ -18,6 +18,7 @@ export interface Customer {
   email?: string;
   phone?: string;
   partySize: number;
+  preference?: string;
   position: number;
   waitTime: number;
   status: 'waiting' | 'notified' | 'served' | 'cancelled';
@@ -73,6 +74,7 @@ export interface CustomerJoinRequest {
   phone?: string;
   partySize: number;
   vendorId: number;
+  preference?: string;
 }
 
 export interface Asset {
@@ -89,13 +91,14 @@ export interface Asset {
 }
 
 export interface AssetCreateRequest {
-  name: string;
-  capacity: number;
+  category: string; // Now required
+  name?: string; // Now optional
+  capacity?: number; // Now optional
   type?: string;
-  category?: string;
   description?: string;
   status: 'available' | 'occupied' | 'maintenance' | 'reserved';
   vendorId: number;
+  applyToAll?: boolean; // New field for applying to all assets in category
 }
 
 export interface AssetUpdateRequest {
