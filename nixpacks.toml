@@ -1,5 +1,0 @@
-[phases.setup]
-nixPkgs = ["nodejs-22_x", "npm-10_x"]
-
-[start]
-cmd = "npm start"
