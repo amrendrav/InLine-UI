@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --host 0.0.0.0 --port $PORT",
+    "start:prod": "npm run build && npx http-server dist/waitlist-frontend -p $PORT",
     "build": "ng build",
     "build:prod": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
@@ -12,7 +13,7 @@
   },
   "private": true,
   "engines": {
-    "node": ">=22.12.0",
+    "node": "22.13.0",
     "npm": ">=8.0.0"
   },
   "dependencies": {
@@ -34,7 +35,8 @@
     "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.15.0"
+    "zone.js": "~0.15.0",
+    "http-server": "^14.1.1"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "20.1.3",
